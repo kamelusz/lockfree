@@ -1,0 +1,4 @@
+---
+Language:        Cpp
+#We are masturbating on LLVM ^^
+BasedOnStyle:  LLVM
