@@ -1,22 +1,44 @@
 #ifndef LF_UTILITY_ATOMIC_HEADER
 #define LF_UTILITY_ATOMIC_HEADER
 
-#include <type_traits>
-#include <cstdlib>
-#include <cstdint>
+#include "utility/traits.h"
 
 namespace lockfree {
 namespace atomic {
 
-constexpr std::uint8_t byte_size = 1;
-constexpr std::uint8_t word_size = 2;
-constexpr std::uint8_t dword_size = 4;
-constexpr std::uint8_t qword_size = 8;
-
 // let SFINAE be \m/
 template <typename T>
-inline std::enable_if_t<sizeof(T) == dword_size, T> 
+inline std::enable_if_t<traits::same_size<T, 1>::value, T> 
 xadd(T *ptr, int arg) {
+  // TODO Can we avoid cast?
+  T result = static_cast<T>(arg);
+
+  asm volatile("\n\tlock; xaddb %b0, %1\n"
+               : "+q"(result), "+m"(*ptr)
+               :
+               : "memory", "cc");
+
+  return result;
+}
+
+template <typename T>
+inline std::enable_if_t<traits::same_size<T, 2>::value, T> 
+xadd(T *ptr, int arg) {
+  // TODO Can we avoid cast?
+  T result = static_cast<T>(arg);
+
+  asm volatile("\n\tlock; xaddw %w0, %1\n"
+               : "+r"(result), "+m"(*ptr)
+               :
+               : "memory", "cc");
+
+  return result;
+}
+
+template <typename T>
+inline std::enable_if_t<traits::same_size<T, 4>::value, T> 
+xadd(T *ptr, int arg) {
+  // TODO Can we avoid cast?
   T result = static_cast<T>(arg);
 
   asm volatile("\n\tlock; xaddl %0, %1\n"
@@ -28,8 +50,9 @@ xadd(T *ptr, int arg) {
 }
 
 template <typename T>
-inline std::enable_if_t<sizeof(T) == qword_size, T> 
+inline std::enable_if_t<traits::same_size<T, 8>::value, T> 
 xadd(T *ptr, int arg) {
+  // TODO Can we avoid cast?
   T result = static_cast<T>(arg);
 
   asm volatile("\n\tlock; xaddq %q0, %1\n"
