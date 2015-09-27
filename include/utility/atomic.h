@@ -1,5 +1,5 @@
-#ifndef LF_UTILITY_HEADER
-#define LF_UTILITY_HEADER
+#ifndef LF_UTILITY_ATOMIC_HEADER
+#define LF_UTILITY_ATOMIC_HEADER
 
 #include <type_traits>
 #include <cstdlib>
@@ -47,4 +47,5 @@ inline void sfence() { asm volatile("sfence" ::: "memory"); }
 
 } // namespace atomic
 } // namespace lockfree
-#endif // LF_UTILITY_HEADER
+
+#endif // LF_UTILITY_ATOMIC_HEADER

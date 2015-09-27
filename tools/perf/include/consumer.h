@@ -3,6 +3,8 @@
 
 #include "common.h"
 
+#include "utility/cpu.h"
+
 #include <iostream>
 #include <xmmintrin.h>
 
@@ -33,7 +35,7 @@ consumer<T>::consumer(T &r, const params &p)
 
 template <typename T>
 void consumer<T>::operator()(const params &param, std::uint8_t num) {
-  // set_cpu(num);
+  lockfree::cpu::set_cpu(num);
 
   while (param.cons_state == State::wait)
     _mm_pause();

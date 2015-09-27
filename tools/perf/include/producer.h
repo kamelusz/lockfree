@@ -3,6 +3,8 @@
 
 #include "common.h"
 
+#include "utility/cpu.h"
+
 #include <cstdint>
 #include <xmmintrin.h>
 
@@ -24,7 +26,7 @@ private:
 
 template <typename T>
 void producer<T>::operator()(const params &param, std::uint8_t num) {
-  // set_cpu(num);
+  lockfree::cpu::set_cpu(num);
 
   while (param.prod_state == State::wait)
     _mm_pause();

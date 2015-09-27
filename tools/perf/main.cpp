@@ -5,34 +5,12 @@
 #include <iostream>
 #include <algorithm>
 #include <vector>
-#include <cstdlib>
 
 #include <thread>
 #include <chrono>
 
 #include <xmmintrin.h>
 #include <unistd.h>
-#include <sched.h>
-#include <sys/sysinfo.h>
-
-// TODO move to separate file
-int set_cpu(unsigned long cpu) {
-  int rc = 0;
-  cpu_set_t set;
-
-  CPU_ZERO(&set);
-  CPU_SET(cpu, &set);
-
-  rc = sched_setaffinity(0, sizeof(cpu_set_t), &set);
-  if (rc == -1) {
-    std::cout << "sched_setaffinity" << std::endl;
-
-    // TODO specify exception
-    throw;
-  }
-
-  return rc;
-}
 
 int main(int argc, char *argv[]) {
   if (argc != 2) {

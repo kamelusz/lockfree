@@ -17,4 +17,5 @@ add_executable(perf
 
 target_link_libraries (perf 
   ${CMAKE_THREAD_LIBS_INIT}
+  lf_utility
   )

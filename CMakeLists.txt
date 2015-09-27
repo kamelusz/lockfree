@@ -16,4 +16,5 @@ include_directories(
   ${HW_INCLUDE_DIR}
   )
 
+add_subdirectory(lib)
 add_subdirectory(tools)
