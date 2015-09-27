@@ -2,6 +2,7 @@
 #include "consumer.h"
 #include "ring/generic.h"
 #include "ring/xadd.h"
+#include "ring/vyukov.h"
 
 #include <iostream>
 #include <algorithm>
