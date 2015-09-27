@@ -1,10 +1,10 @@
 #ifndef LF_XADD_RING_HEADER
 #define LF_XADD_RING_HEADER
 
-#include "utility/atomic.h"
 #include "utility/cpu.h"
 
-#include <vector>
+#include <atomic>
+#include <memory>
 
 namespace lockfree {
 namespace ring {
@@ -21,20 +21,20 @@ public:
 private:
   struct entry {
     T *buf{nullptr};
-    std::uint64_t flag{0};
+    std::atomic<std::uint32_t> flag{0};
   };
 
-  alignas(cpu::CACHE_SIZE) volatile std::size_t prod_head_;
-  alignas(cpu::CACHE_SIZE) volatile std::size_t cons_head_;
-  alignas(cpu::CACHE_SIZE) std::vector<entry> array_;
+  alignas(cpu::CACHE_SIZE) volatile std::atomic<std::size_t> prod_head_{};
+  alignas(cpu::CACHE_SIZE) volatile std::size_t cons_head_{};
+  alignas(cpu::CACHE_SIZE) std::unique_ptr<entry[]> array_{};
 };
 
 template <typename T, typename D>
-XaddRing<T, D>::XaddRing()
-    : prod_head_(0), cons_head_(0) {
+XaddRing<T, D>::XaddRing() {
   const D *derived = static_cast<D *>(this);
+  constexpr auto size = derived->size();
 
-  array_.resize(derived->size());
+  array_ = std::make_unique<entry[]>(size);
 }
 
 template <typename T, typename D>
@@ -46,12 +46,11 @@ decltype(auto) XaddRing<T, D>::enqueue(T *data) {
   if (space < derived->producers())
     return D::Error::no_space;
 
-  const auto old_head = atomic::xadd(&prod_head_, 1);
+  const auto old_head = prod_head_.fetch_add(1);
   const auto valid_head = old_head & mask;
 
   array_[valid_head].buf = data;
-  lockfree::atomic::sfence();
-  array_[valid_head].flag = 1;
+  array_[valid_head].flag.store(1, std::memory_order_release);
 
   return D::Error::ok;
 }
@@ -62,12 +61,11 @@ T *XaddRing<T, D>::dequeue() {
   constexpr auto mask = derived->mask();
   const auto head = cons_head_;
 
-  atomic::lfence();
-  if (!(array_[head].flag & 1))
+  if (!(array_[head].flag.load(std::memory_order_acquire) & 1))
     return nullptr;
 
   T *ret = array_[head].buf;
-  array_[head].flag = 0;
+  array_[head].flag.store(0, std::memory_order_release);
   cons_head_ = (head + 1) & mask;
 
   return ret;
@@ -77,3 +75,4 @@ T *XaddRing<T, D>::dequeue() {
 } // namespace lockfree
 
 #endif // LF_XADD_RING_HEADER
+
