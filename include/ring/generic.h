@@ -9,8 +9,8 @@
 namespace lockfree {
 namespace ring {
 
-template <typename T, std::size_t SIZE = 1024,
-          template <typename, typename> class RingPolicy = XaddRing>
+template <typename T, std::size_t SIZE,
+          template <typename, typename> class RingPolicy>
 class GenericRing : private RingPolicy<T, GenericRing<T, SIZE, RingPolicy>> {
 public:
   using RingPolicyBase = RingPolicy<T, GenericRing>;
