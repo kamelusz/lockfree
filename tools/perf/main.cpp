@@ -1,6 +1,7 @@
 #include "producer.h"
 #include "consumer.h"
 #include "ring/generic.h"
+#include "ring/xadd.h"
 
 #include <iostream>
 #include <algorithm>

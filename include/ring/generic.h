@@ -1,11 +1,6 @@
 #ifndef LF_GENERIC_RING_HEADER
 #define LF_GENERIC_RING_HEADER
 
-#include "xadd.h"
-
-#include <functional>
-#include <fstream>
-
 namespace lockfree {
 namespace ring {
 

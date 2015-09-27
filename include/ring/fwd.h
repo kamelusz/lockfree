@@ -1,7 +1,7 @@
 #ifndef LF_RING_FWD_HEADER
 #define LF_RING_FWD_HEADER
 
-#include <cstdlib>
+#include <cstddef>
 
 namespace lockfree {
 namespace ring {

@@ -2,8 +2,8 @@
 #define LF_XADD_RING_HEADER
 
 #include "utility/atomic.h"
+#include "utility/cpu.h"
 
-#include <xmmintrin.h>
 #include <vector>
 
 namespace lockfree {
@@ -12,11 +12,7 @@ namespace ring {
 template <typename T, typename D>
 class XaddRing {
 public:
-  XaddRing() : prod_head_(0), cons_head_(0) {
-    const D *derived = static_cast<D *>(this);
-
-    array_.resize(derived->size());
-  }
+  XaddRing();
   ~XaddRing() = default;
 
   decltype(auto) enqueue(T *data);
@@ -28,21 +24,30 @@ private:
     std::uint64_t flag{0};
   };
 
-  volatile std::size_t prod_head_ __attribute((aligned(128)));
-  volatile std::size_t cons_head_ __attribute((aligned(128)));
-  std::vector<entry> array_ __attribute((aligned(128)));
+  alignas(cpu::CACHE_SIZE) volatile std::size_t prod_head_;
+  alignas(cpu::CACHE_SIZE) volatile std::size_t cons_head_;
+  alignas(cpu::CACHE_SIZE) std::vector<entry> array_;
 };
+
+template <typename T, typename D>
+XaddRing<T, D>::XaddRing()
+    : prod_head_(0), cons_head_(0) {
+  const D *derived = static_cast<D *>(this);
+
+  array_.resize(derived->size());
+}
 
 template <typename T, typename D>
 decltype(auto) XaddRing<T, D>::enqueue(T *data) {
   const D *derived = static_cast<D *>(this);
-  constexpr std::uint32_t mask = derived->mask();
-  const std::uint32_t space = (mask + cons_head_ - prod_head_) & mask;
+  constexpr auto mask = derived->mask();
+
+  const auto space = (mask + cons_head_ - prod_head_) & mask;
   if (space < derived->producers())
     return D::Error::no_space;
 
-  const std::uint32_t old_head = lockfree::atomic::xadd(&prod_head_, 1);
-  const std::uint32_t valid_head = old_head & mask;
+  const auto old_head = atomic::xadd(&prod_head_, 1);
+  const auto valid_head = old_head & mask;
 
   array_[valid_head].buf = data;
   lockfree::atomic::sfence();
@@ -54,10 +59,10 @@ decltype(auto) XaddRing<T, D>::enqueue(T *data) {
 template <typename T, typename D>
 T *XaddRing<T, D>::dequeue() {
   const D *derived = static_cast<D *>(this);
-  constexpr std::uint32_t mask = derived->mask();
-  const std::uint32_t head = cons_head_;
+  constexpr auto mask = derived->mask();
+  const auto head = cons_head_;
 
-  lockfree::atomic::lfence();
+  atomic::lfence();
   if (!(array_[head].flag & 1))
     return nullptr;
 
@@ -67,6 +72,7 @@ T *XaddRing<T, D>::dequeue() {
 
   return ret;
 }
+
 } // namespace ring
 } // namespace lockfree
 
