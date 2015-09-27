@@ -2,7 +2,6 @@
 #define LF_VYUKOV_RING_HEADER
 
 #include <atomic>
-#include <vector>
 #include <memory>
 #include <cstdint>
 
@@ -20,12 +19,12 @@ public:
 
 private:
   struct entry {
-    std::atomic<std::size_t> sequence_{0};
+    std::atomic_size_t sequence_{0};
     T *data_{nullptr};
   };
 
-  alignas(cpu::CACHE_SIZE) std::atomic<std::size_t> enqueue_pos_{};
-  alignas(cpu::CACHE_SIZE) std::atomic<std::size_t> dequeue_pos_{};
+  alignas(cpu::CACHE_SIZE) std::atomic_size_t enqueue_pos_{};
+  alignas(cpu::CACHE_SIZE) std::atomic_size_t dequeue_pos_{};
   alignas(cpu::CACHE_SIZE) std::unique_ptr<entry[]> array_{};
 };
 
