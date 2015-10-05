@@ -1,4 +1,4 @@
-# lockless
+# lockfree
 The primary goal of the library is to gather non-blocking algorithms I used at work.
 
 There are two requirements I try to meet in implementation:
