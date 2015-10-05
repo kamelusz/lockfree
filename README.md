@@ -2,8 +2,8 @@
 The primary goal of the library is to gather non-blocking algorithms I used at work.
 
 There are two requirements I try to meet in implementation:
-1) perfomance;
-2) usability;
+ - perfomance;
+ - usability;
 
 Because of these requirements the following decisions were taken:
  - implement every algorithm as policy in terms of policy-based classes [1];
